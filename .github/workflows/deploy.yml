@@ -68,6 +68,15 @@ jobs:
             | xargs -0 sed -i -E \
                 "s#(\"(scriptSrc|endpoint|viewEndpoint|eventEndpoint|sessionEndpoint)\":\")([0-9a-f]{8,32}/)#\1${BNS}/\3#g"
 
+          # The app fetches same-origin API routes as quoted literals ("/api/price"
+          # for the live crypto ticker, /api/ondo/tvl, /api/luma, …). Those Next.js
+          # route handlers can't run on static hosting, so captured JSON snapshots
+          # are committed under public/api/. Rewrite the quoted "/api/ literals to
+          # the subpath so they resolve to those snapshots. The leading quote means
+          # external links like "https://developer.metamask.io/api/…" are untouched.
+          find _site -type f -name '*.js' -print0 \
+            | xargs -0 sed -i "s#\"/api/#\"${B}/api/#g"
+
           # Guard against accidental double-prefixing if the workflow is re-run on a
           # tree that was already rewritten.
           find _site -type f \( -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.json' \) -print0 \
